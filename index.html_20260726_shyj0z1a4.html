@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Гласные буквы - Игра с Яшей</title>
+<style>
+:root {
+  --game-bg: #FFFDF5;
+  --game-card: #FFFFFF;
+  --game-primary: #1565C0;
+  --game-accent: #E53935;
+  --game-text: #1A237E;
+  --game-success: #43A047;
+  --game-error: #E53935;
+  --game-muted: #78909C;
+  --game-yellow: #FFCA28;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', Arial, sans-serif;
+  background-color: var(--game-bg);
+  background-image: 
+    linear-gradient(rgba(120, 144, 156, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 144, 156, 0.3) 1px, transparent 1px);
+  background-size: 20px 20px;
+  color: var(--game-text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  left: 40px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--game-accent);
+  z-index: 1000;
+  opacity: 0.6;
+}
+
+.screen {
+  display: none;
+  min-height: 100vh;
+  padding: 20px;
+  position: relative;
+}
+
+.screen.active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--game-card);
+  border-bottom: 3px solid var(--game-primary);
+  padding: 10px 20px;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  display: none;
+}
+
+.top-bar.visible {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.progress-container {
+  flex: 1;
+  min-width: 200px;
+  height: 25px;
+  background: #E3F2FD;
+  border: 2px solid var(--game-primary);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--game-success), #66BB6A);
+  width: 0%;
+  transition: width 0.5s ease;
+  border-radius: 10px;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: bold;
+  color: var(--game-text);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.score-display {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--game-primary);
+  background: var(--game-card);
+  padding: 5px 15px;
+  border-radius: 20px;
+  border: 2px solid var(--game-accent);
+}
+
+.counter-display {
+  display: flex;
+  gap: 15px;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.counter-done { color: var(--game-success); }
+.counter-left { color: var(--game-primary); }
+
+.start-screen, .stage-complete, .final-screen {
+  text-align: center;
+  background: var(--game-card);
+  padding: 40px;
+  border-radius: 20px;
+  border: 4px solid var(--game-primary);
+  box-shadow: 8px 8px 0 var(--game-muted);
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+.game-title, .final-title, .stage-title {
+  font-size: 2.2rem;
+  color: var(--game-primary);
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 0 var(--game-accent);
+}
+
+.character-img {
+  width: 250px;
+  height: auto;
+  margin: 20px 0;
+  border: 4px solid var(--game-accent);
+  border-radius: 20px;
+  background: white;
+}
+
+.btn-start, .btn-continue, .btn-replay, .btn-errors {
+  background: var(--game-primary);
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  font-size: 1.3rem;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 6px 0 #0D47A1;
+  transition: all 0.1s;
+  margin: 10px;
+}
+
+.btn-start:hover, .btn-continue:hover, .btn-replay:hover, .btn-errors:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 #0D47A1;
+}
+
+.btn-start:active, .btn-continue:active, .btn-replay:active, .btn-errors:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #0D47A1;
+}
+
+.btn-errors {
+  background: var(--game-accent);
+  box-shadow: 0 6px 0 #C62828;
+}
+
+.btn-errors:hover { box-shadow: 0 8px 0 #C62828; }
+.btn-errors:active { box-shadow: 0 2px 0 #C62828; }
+
+.game-area {
+  width: 100%;
+  max-width: 900px;
+  margin: 100px auto 20px;
+  padding: 20px;
+}
+
+.task-instruction {
+  background: var(--game-card);
+  border: 3px solid var(--game-primary);
+  border-radius: 15px;
+  padding: 15px 25px;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+  text-align: center;
+  box-shadow: 4px 4px 0 var(--game-muted);
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+  padding: 20px;
+}
+
+.letter-card {
+  aspect-ratio: 1;
+  background: var(--game-card);
+  border: 3px solid var(--game-primary);
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--game-muted);
+  transition: all 0.2s;
+  position: relative;
+}
+
+.letter-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 6px 6px 0 var(--game-muted);
+}
+
+.letter-card:active {
+  transform: translateY(2px);
+  box-shadow: 2px 2px 0 var(--game-muted);
+}
+
+.letter-card.correct {
+  background: #E8F5E9;
+  border-color: var(--game-success);
+  box-shadow: 4px 4px 0 #2E7D32;
+  pointer-events: none;
+}
+
+.letter-card.correct::after {
+  content: '✓';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: var(--game-success);
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  border: 2px solid white;
+}
+
+.letter-card.wrong {
+  animation: shake 0.5s;
+  background: #FFEBEE;
+  border-color: var(--game-error);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(10px); }
+  60% { transform: translateX(-10px); }
+  80% { transform: translateX(10px); }
+}
+
+.character-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 90;
+  display: none;
+}
+
+.character-container.visible { display: block; }
+
+.character-img-small {
+  width: 120px;
+  height: auto;
+  border: 3px solid var(--game-accent);
+  border-radius: 15px;
+  background: white;
+}
+
+.speech-bubble {
+  position: absolute;
+  bottom: 130px;
+  right: 0;
+  background: var(--game-card);
+  border: 3px solid var(--game-primary);
+  border-radius: 20px;
+  padding: 12px 15px;
+  max-width: 220px;
+  font-size: 1rem;
+  box-shadow: 4px 4px 0 var(--game-muted);
+  display: none;
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  right: 30px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid var(--game-primary);
+}
+
+.speech-bubble.visible {
+  display: block;
+  animation: popIn 0.3s;
+}
+
+@keyframes popIn {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.feedback-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.feedback-overlay.visible { display: flex; }
+
+.feedback-img {
+  max-width: 90%;
+  max-height: 60vh;
+  border-radius: 20px;
+  border: 5px solid white;
+  margin-bottom: 20px;
+}
+
+.feedback-box {
+  background: var(--game-card);
+  border: 4px solid var(--game-primary);
+  border-radius: 20px;
+  padding: 20px 30px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  max-width: 400px;
+  width: 90%;
+}
+
+.feedback-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: var(--game-text);
+}
+
+.feedback-text {
+  font-size: 1.1rem;
+  color: var(--game-text);
+  margin-bottom: 15px;
+}
+
+.btn-next {
+  background: var(--game-success);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  font-size: 1.1rem;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 4px 0 #2E7D32;
+  display: none;
+}
+
+.btn-next.visible { display: inline-block; }
+
+.stage-stats, .final-stats {
+  background: #E8F5E9;
+  padding: 20px;
+  border-radius: 15px;
+  margin: 20px 0;
+  border: 2px solid var(--game-success);
+}
+
+.final-stats {
+  background: #FFF3E0;
+  border: 2px solid var(--game-accent);
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 1.2rem;
+  border-bottom: 2px dashed var(--game-muted);
+}
+
+.stat-row:last-child { border-bottom: none; }
+
+.final-img {
+  width: 400px;
+  max-width: 90%;
+  border: 4px solid var(--game-primary);
+  border-radius: 20px;
+  margin: 20px 0;
+}
+
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  top: -10px;
+  z-index: 150;
+  animation: fall linear forwards;
+}
+
+@keyframes fall {
+  to { transform: translateY(100vh) rotate(720deg); }
+}
+
+.catch-area {
+  position: relative;
+  height: 400px;
+  background: var(--game-card);
+  border: 4px solid var(--game-primary);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.falling-letter {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: var(--game-yellow);
+  border: 3px solid var(--game-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--game-muted);
+  animation: fallDown 3s linear;
+}
+
+@keyframes fallDown {
+  from { top: -60px; }
+  to { top: 100%; }
+}
+
+.word-container {
+  background: var(--game-card);
+  padding: 30px;
+  border-radius: 20px;
+  border: 4px solid var(--game-primary);
+  margin: 20px 0;
+  text-align: center;
+}
+
+.word-display {
+  font-size: 3rem;
+  font-weight: bold;
+  margin: 20px 0;
+  letter-spacing: 10px;
+}
+
+.word-display .blank {
+  display: inline-block;
+  width: 50px;
+  height: 60px;
+  border-bottom: 4px solid var(--game-accent);
+  margin: 0 5px;
+  color: var(--game-accent);
+}
+
+.options-grid {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.option-btn {
+  width: 70px;
+  height: 70px;
+  font-size: 2rem;
+  font-weight: bold;
+  border: 3px solid var(--game-primary);
+  border-radius: 15px;
+  background: var(--game-card);
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--game-muted);
+  transition: all 0.2s;
+}
+
+.option-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 6px 6px 0 var(--game-muted);
+}
+
+.option-btn:active {
+  transform: translateY(2px);
+  box-shadow: 2px 2px 0 var(--game-muted);
+}
+
+@media (max-width: 600px) {
+  .cards-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .letter-card { font-size: 2rem; }
+  .game-title, .final-title, .stage-title { font-size: 1.8rem; }
+  .character-img { width: 180px; }
+  .top-bar { flex-direction: column; }
+  .progress-container { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar" id="topBar">
+  <div class="progress-container">
+    <div class="progress-fill" id="progressFill"></div>
+    <div class="progress-text" id="progressText">0 из 10</div>
+  </div>
+  <div class="score-display">⭐ <span id="scoreDisplay">0</span></div>
+  <div class="counter-display">
+    <span class="counter-done">✓ <span id="foundCount">0</span></span>
+    <span class="counter-left">○ <span id="leftCount">10</span></span>
+  </div>
+</div>
+
+<div class="screen active" id="startScreen">
+  <div class="start-screen">
+    <h1 class="game-title">📚 Гласные буквы</h1>
+    <p style="font-size: 1.2rem; margin-bottom: 20px;">Помоги Яше найти все гласные буквы!</p>
+    <img src="https://sun9-68.userapi.com/s/v1/ig2/HNkUjGS-0LG69XvLDEAuZVzDF1Ms3a1fYvgnRutr19ZaZh1BZ9LvP4tr8bx112LKG-TU-FR3tdCgwJ8xE4BNMHmP.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1080x1080,1280x1280,1440x1440,2048x2048&from=bu&u=heSNeiIHfe5xeDeP1Oh-4ZN4jfj8ScwAp_Hwo9NUP68&cs=1280x0" alt="Яша" class="character-img">
+    <p style="margin: 20px 0; font-size: 1.1rem;">3 этапа игры:<br>1️⃣ Найди гласные<br>2️⃣ Поймай гласную<br>3️⃣ Собери слово</p>
+    <button class="btn-start" onclick="startGame()">Начать игру</button>
+  </div>
+</div>
+
+<div class="screen" id="gameScreen1">
+  <div class="game-area">
+    <div class="task-instruction">🔍 Этап 1: Найди и нажми на все гласные буквы!</div>
+    <div class="cards-grid" id="cardsGrid1"></div>
+  </div>
+</div>
+
+<div class="screen" id="gameScreen2">
+  <div class="game-area">
+    <div class="task-instruction">🎯 Этап 2: Поймай все гласные буквы! Нажимай только на гласные!</div>
+    <div class="catch-area" id="catchArea"></div>
+  </div>
+</div>
+
+<div class="screen" id="gameScreen3">
+  <div class="game-area">
+    <div class="task-instruction">✏️ Этап 3: Вставь пропущенную гласную букву!</div>
+    <div class="word-container" id="wordContainer">
+      <div class="word-display" id="wordDisplay"></div>
+      <div class="options-grid" id="optionsGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="character-container" id="characterContainer">
+  <div class="speech-bubble" id="speechBubble"></div>
+  <img src="https://sun9-68.userapi.com/s/v1/ig2/HNkUjGS-0LG69XvLDEAuZVzDF1Ms3a1fYvgnRutr19ZaZh1BZ9LvP4tr8bx112LKG-TU-FR3tdCgwJ8xE4BNMHmP.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1080x1080,1280x1280,1440x1440,2048x2048&from=bu&u=heSNeiIHfe5xeDeP1Oh-4ZN4jfj8ScwAp_Hwo9NUP68&cs=1280x0" alt="Яша" class="character-img-small">
+</div>
+
+<div class="feedback-overlay" id="feedbackOverlay">
+  <img src="" alt="" class="feedback-img" id="feedbackImg">
+  <div class="feedback-box">
+    <div class="feedback-title" id="feedbackTitle"></div>
+    <div class="feedback-text" id="feedbackText"></div>
+    <button class="btn-next" id="btnNext" onclick="closeFeedback()">Дальше ➜</button>
+  </div>
+</div>
+
+<div class="screen" id="stageCompleteScreen">
+  <div class="stage-complete">
+    <h2 class="stage-title">🎉 Этап пройден!</h2>
+    <div class="stage-stats">
+      <div class="stat-row"><span>Найдено:</span><span id="stageFound">10 из 10</span></div>
+      <div class="stat-row"><span>Ошибок:</span><span id="stageErrors">0</span></div>
+      <div class="stat-row"><span>Баллы:</span><span id="stageScore">0</span></div>
+    </div>
+    <p id="stageMessage" style="font-size: 1.2rem; margin: 20px 0;"></p>
+    <button class="btn-continue" onclick="nextStage()">Дальше ➜</button>
+  </div>
+</div>
+
+<div class="screen" id="finalScreen">
+  <div class="final-screen">
+    <h1 class="final-title">🏆 Миссия выполнена!</h1>
+    <img src="https://sun9-26.userapi.com/s/v1/ig2/5QUZ44dhb7acAtWZME_QYuzUMtAjAEIptJ2NGrhS8bFe2dVt5z0e6lTQb5Mbptx4e9NlZhoPOOpwcAbvgdt940Z0.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1080x1080,1280x1280,1440x1440,2048x2048&from=bu&u=hN3EIo5xN98s-m4GIzFfHIUoFcjFBMcauolMaoJY4K0&cs=1280x0" alt="Победа" class="final-img">
+    <div class="final-stats">
+      <div class="stat-row"><span>⭐ Всего баллов:</span><span id="finalScore">0</span></div>
+      <div class="stat-row"><span>✓ Верных ответов:</span><span id="finalCorrect">0</span></div>
+      <div class="stat-row"><span>✗ Ошибок:</span><span id="finalErrors">0</span></div>
+      <div class="stat-row"><span>📊 Оценка:</span><span id="finalGrade">Отлично!</span></div>
+    </div>
+    <p id="finalMessage" style="font-size: 1.2rem; margin: 20px 0;"></p>
+    <div>
+      <button class="btn-replay" onclick="restartGame()">🔄 Играть снова</button>
+      <button class="btn-errors" onclick="showErrors()">📋 Ошибки</button>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="errorsScreen">
+  <div class="stage-complete">
+    <h2 class="stage-title">📋 Разбор ошибок</h2>
+    <div id="errorsList" style="margin: 20px 0; text-align: left;"></div>
+    <button class="btn-continue" onclick="backToFinal()">← Назад</button>
+  </div>
+</div>
+
+<script>
+const vowels = ['А', 'Е', 'Ё', 'И', 'О', 'У', 'Ы', 'Э', 'Ю', 'Я'];
+const consonants = ['Б', 'В', 'Г', 'Д', 'Ж', 'З', 'К', 'Л', 'М', 'Н', 'П', 'Р', 'С', 'Т', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ'];
+
+const words = [
+  { word: 'М_ЛОКО', answer: 'О', options: ['О', 'А', 'У'] },
+  { word: 'Р_КА', answer: 'Е', options: ['Е', 'И', 'Я'] },
+  { word: 'Л_ПА', answer: 'А', options: ['А', 'О', 'У'] },
+  { word: 'Д_М', answer: 'О', options: ['О', 'А', 'Ы'] },
+  { word: 'К_Т', answer: 'О', options: ['О', 'Е', 'И'] }
+];
+
+const vowelExplanations = {
+  'А': 'А — гласная! Её можно спеть: А-а-а!',
+  'Е': 'Е — гласная! Попробуй спеть: Е-е-е!',
+  'Ё': 'Ё — гласная! Всегда ударная: Ё-ё-ё!',
+  'И': 'И — гласная! Поем: И-и-и!',
+  'О': 'О — гласная! Как удивление: О-о-о!',
+  'У': 'У — гласная! Как ветер: У-у-у!',
+  'Ы': 'Ы — гласная! Особенная буква: Ы-ы-ы!',
+  'Э': 'Э — гласная! Как восклицание: Э-э-э!',
+  'Ю': 'Ю — гласная! Два звука в одной букве: Ю-ю!',
+  'Я': 'Я — гласная! Тоже два звука: Я-я!'
+};
+
+const consonantExplanations = {
+  'Б': 'Б — согласная! Её нельзя петь, язык мешает.',
+  'В': 'В — согласная! Губки смыкаются, петь не получится.',
+  'Г': 'Г — согласная! Горло работает, но это не гласная.',
+  'Д': 'Д — согласная! Язычок стучит — не гласная.',
+  'Ж': 'Ж — согласная! Как жук жужжит: ж-ж-ж!',
+  'З': 'З — согласная! Как пчела: з-з-з!',
+  'К': 'К — согласная! Короткий щелчок — не поёшь.',
+  'Л': 'Л — согласная! Как лампа светит: л-л-л!',
+  'М': 'М — согласная! Губки закрыты: м-м-м!',
+  'Н': 'Н — согласная! Носик работает: н-н-н!',
+  'П': 'П — согласная! Губки хлопают: п-п-п!',
+  'Р': 'Р — согласная! Язычок дрожит: р-р-р!',
+  'С': 'С — согласная! Как змейка: с-с-с!',
+  'Т': 'Т — согласная! Язычок стучит: т-т-т!',
+  'Ф': 'Ф — согласная! Ветерок: ф-ф-ф!',
+  'Х': 'Х — согласная! Как будто холодно: х-х-х!',
+  'Ц': 'Ц — согласная! Цок-цок — не гласная.',
+  'Ч': 'Ч — согласная! Как часы: ч-ч-ч!',
+  'Ш': 'Ш — согласная! Ш-ш-ш — тишина!',
+  'Щ': 'Щ — согласная! Мягкая, как щётка: щ-щ-щ!'
+};
+
+const correctPhrases = ['Верно!', 'Молодец!', 'Отлично!', 'Правильно!'];
+const wrongPhrases = ['Почти! Попробуй ещё раз.', 'Не совсем.', 'Это не гласная.'];
+
+const yashaCorrect = ['Молодец! 🐾', 'Верно! 🎉', 'Отлично! 🌟', 'Правильно! 💪'];
+const yashaWrong = ['Попробуй ещё! 🐾', 'Не расстраивайся! 💛', 'Почти! 🌈', 'Ищи дальше! 🎵'];
+const yashaHint = ['Ищи А, Е, Ё, И, О, У, Ы, Э, Ю, Я! 🐾', 'Гласные можно петь! 🎵', 'Ищи буквы, которые поются! 💛', 'Найди все 10 гласных! 🌟'];
+const yashaFinal = ['Миссия выполнена! 🏆', 'Все гласные найдены! 🎉', 'Ты справился! 🌟'];
+
+let gameState = {
+  score: 0, found: 0, total: 10, errors: 0, errorDetails: [], cards: [],
+  waitingForNext: false, currentStage: 1, totalStages: 3,
+  stageScores: [0, 0, 0], stageErrors: [0, 0, 0], stageFound: [0, 0, 0],
+  currentWord: 0
+};
+
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playTone(freq, duration, type = 'sine', volume = 0.15) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+
+function playCorrectSound() {
+  playTone(523, 0.15, 'sine', 0.12);
+  setTimeout(() => playTone(659, 0.15, 'sine', 0.12), 100);
+  setTimeout(() => playTone(784, 0.25, 'sine', 0.12), 200);
+}
+
+function playWrongSound() {
+  playTone(200, 0.3, 'triangle', 0.1);
+  setTimeout(() => playTone(180, 0.3, 'triangle', 0.1), 150);
+}
+
+function playVictorySound() {
+  const notes = [523, 587, 659, 698, 784, 880, 988, 1047];
+  notes.forEach((n, i) => setTimeout(() => playTone(n, 0.2, 'sine', 0.1), i * 100));
+}
+
+function speak(text) {
+  if ('speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ru-RU';
+    utterance.rate = 0.9;
+    utterance.pitch = 1.2;
+    utterance.volume = 0.7;
+    speechSynthesis.speak(utterance);
+  }
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function randomFrom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function spawnConfetti() {
+  const colors = ['#E53935', '#FFCA28', '#43A047', '#42A5F5', '#CE93D8', '#F48FB1'];
+  for (let i = 0; i < 40; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    piece.style.animationDuration = (1 + Math.random() * 2) + 's';
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 3000);
+  }
+}
+
+function showCharacter() {
+  document.getElementById('characterContainer').classList.add('visible');
+}
+
+function hideCharacter() {
+  document.getElementById('characterContainer').classList.remove('visible');
+}
+
+function yashaSay(text) {
+  const bubble = document.getElementById('speechBubble');
+  bubble.textContent = text;
+  bubble.classList.add('visible');
+  setTimeout(() => bubble.classList.remove('visible'), 3000);
+}
+
+function startGame() {
+  initAudio();
+  gameState = {
+    score: 0, found: 0, total: 10, errors: 0, errorDetails: [], cards: [],
+    waitingForNext: false, currentStage: 1, totalStages: 3,
+    stageScores: [0, 0, 0], stageErrors: [0, 0, 0], stageFound: [0, 0, 0],
+    currentWord: 0
+  };
+  startStage1();
+}
+
+function startStage1() {
+  const selectedConsonants = shuffle(consonants).slice(0, 10);
+  const allCards = [
+    ...vowels.map(l => ({ letter: l, type: 'vowel' })),
+    ...selectedConsonants.map(l => ({ letter: l, type: 'consonant' }))
+  ];
+  gameState.cards = shuffle(allCards);
+  renderCards1();
+  updateUI();
+  showScreen('gameScreen1');
+  document.getElementById('topBar').classList.add('visible');
+  showCharacter();
+  setTimeout(() => {
+    yashaSay(randomFrom(yashaHint));
+    speak('Найди все гласные буквы!');
+  }, 500);
+}
+
+function renderCards1() {
+  const grid = document.getElementById('cardsGrid1');
+  grid.innerHTML = '';
+  gameState.cards.forEach((card, index) => {
+    const el = document.createElement('div');
+    el.className = 'letter-card';
+    el.textContent = card.letter;
+    el.dataset.type = card.type;
+    el.dataset.letter = card.letter;
+    el.onclick = () => handleCardClick1(el, card, index);
+    grid.appendChild(el);
+  });
+}
+
+function handleCardClick1(el, card, index) {
+  if (gameState.waitingForNext) return;
+  if (el.classList.contains('correct') || el.classList.contains('disabled')) return;
+  
+  if (card.type === 'vowel') {
+    el.classList.add('correct');
+    gameState.found++;
+    gameState.score += 10;
+    gameState.stageScores[0] += 10;
+    playCorrectSound();
+    spawnConfetti();
+    const phrase = randomFrom(correctPhrases);
+    const explanation = vowelExplanations[card.letter];
+    showFeedback(true, phrase, explanation, false);
+    yashaSay(randomFrom(yashaCorrect));
+    speak(phrase);
+    updateUI();
+    if (gameState.found >= gameState.total) {
+      setTimeout(() => {
+        closeFeedback();
+        setTimeout(() => showStageComplete(), 500);
+      }, 1500);
+    }
+  } else {
+    el.classList.add('wrong');
+    gameState.errors++;
+    gameState.stageErrors[0]++;
+    gameState.errorDetails.push({ stage: 1, letter: card.letter, explanation: consonantExplanations[card.letter] });
+    playWrongSound();
+    const phrase = randomFrom(wrongPhrases);
+    const explanation = consonantExplanations[card.letter] || `${card.letter} — это согласная. Гласные можно петь!`;
+    showFeedback(false, phrase, explanation, true);
+    yashaSay(randomFrom(yashaWrong));
+    speak(phrase);
+    setTimeout(() => el.classList.remove('wrong'), 1000);
+    updateUI();
+  }
+}
+
+function showFeedback(isCorrect, title, detail, showNext) {
+  const overlay = document.getElementById('feedbackOverlay');
+  const img = document.getElementById('feedbackImg');
+  const titleEl = document.getElementById('feedbackTitle');
+  const textEl = document.getElementById('feedbackText');
+  const btnNext = document.getElementById('btnNext');
+  
+  if (isCorrect) {
+    img.src = 'https://sun9-85.userapi.com/s/v1/ig2/79OjGTOic44hDvWO2QzVTySu-QYbE6p58GcHr-8AhnIu1Lo1APel0HGP2cqJU9XAMswgSb_BG7GVcnpBT-9HavoG.jpg?quality=95&as=32x18,48x27,72x40,108x60,160x89,240x134,360x201,480x268,540x301,640x357,720x402,1080x603,1280x714,1376x768&from=bu&cs=1280x0';
+  } else {
+    img.src = 'https://sun9-63.userapi.com/s/v1/ig2/gkMVpy2lmkugmXA8rpqh3Bp3HjEbBx6ej2-YVjivTarwc28QN6Bq1uMmm1bCYjw28g1xMjcNZZb443mQasKeNccf.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&u=aUTzDUD-0HdON1M__eSFiG8j0WD77O7l--lCG2ywEys&cs=1024x0';
+  }
+  
+  titleEl.textContent = title;
+  textEl.textContent = detail;
+  
+  if (isCorrect && gameState.found < gameState.total) {
+    btnNext.classList.add('visible');
+    gameState.waitingForNext = true;
+  } else if (!isCorrect) {
+    btnNext.classList.add('visible');
+    gameState.waitingForNext = true;
+  } else {
+    btnNext.classList.remove('visible');
+    gameState.waitingForNext = false;
+  }
+  
+  overlay.classList.add('visible');
+  
+  if (!showNext && isCorrect) {
+    setTimeout(() => {
+      if (overlay.classList.contains('visible')) closeFeedback();
+    }, 2500);
+  }
+}
+
+function closeFeedback() {
+  document.getElementById('feedbackOverlay').classList.remove('visible');
+  document.getElementById('btnNext').classList.remove('visible');
+  gameState.waitingForNext = false;
+}
+
+function updateUI() {
+  const progress = (gameState.found / gameState.total) * 100;
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('progressText').textContent = `${gameState.found} из ${gameState.total}`;
+  document.getElementById('scoreDisplay').textContent = gameState.score;
+  document.getElementById('foundCount').textContent = gameState.found;
+  document.getElementById('leftCount').textContent = gameState.total - gameState.found;
+}
+
+function showStageComplete() {
+  playVictorySound();
+  spawnConfetti();
+  gameState.stageFound[gameState.currentStage - 1] = gameState.found;
+  document.getElementById('stageFound').textContent = `${gameState.found} из ${gameState.total}`;
+  document.getElementById('stageErrors').textContent = gameState.stageErrors[gameState.currentStage - 1];
+  document.getElementById('stageScore').textContent = gameState.stageScores[gameState.currentStage - 1];
+  
+  if (gameState.stageErrors[gameState.currentStage - 1] === 0) {
+    document.getElementById('stageMessage').textContent = 'Молодец! Без ошибок! 🌟';
+  } else if (gameState.stageErrors[gameState.currentStage - 1] <= 3) {
+    document.getElementById('stageMessage').textContent = 'Хорошо! Почти без ошибок! 🎉';
+  } else {
+    document.getElementById('stageMessage').textContent = 'Молодец! Ты справился! 💪';
+  }
+  
+  yashaSay(randomFrom(yashaFinal));
+  speak('Молодец!');
+  document.getElementById('topBar').classList.remove('visible');
+  hideCharacter();
+  showScreen('stageCompleteScreen');
+}
+
+function nextStage() {
+  if (gameState.currentStage < 3) {
+    gameState.currentStage++;
+    gameState.found = 0;
+    gameState.errors = 0;
+    if (gameState.currentStage === 2) startStage2();
+    else if (gameState.currentStage === 3) startStage3();
+  } else {
+    showFinalScreen();
+  }
+}
+
+function startStage2() {
+  gameState.found = 0;
+  gameState.errors = 0;
+  updateUI();
+  showScreen('gameScreen2');
+  document.getElementById('topBar').classList.add('visible');
+  showCharacter();
+  yashaSay('Лови только гласные! 🐾');
+  setTimeout(() => startCatchGame(), 1000);
+}
+
+function startCatchGame() {
+  const area = document.getElementById('catchArea');
+  area.innerHTML = '';
+  let caught = 0;
+  const total = 10;
+  let lettersSpawned = 0;
+  
+  function spawnLetter() {
+    if (lettersSpawned >= 20 || caught >= total) return;
+    
+    const isVowel = Math.random() > 0.5;
+    const letter = isVowel ? randomFrom(vowels) : randomFrom(consonants);
+    
+    const el = document.createElement('div');
+    el.className = 'falling-letter';
+    el.textContent = letter;
+    el.style.left = Math.random() * (area.offsetWidth - 60) + 'px';
+    el.dataset.isVowel = isVowel;
+    el.dataset.letter = letter;
+    
+    el.onclick = () => {
+      if (el.classList.contains('caught')) return;
+      el.classList.add('caught');
+      
+      if (isVowel) {
+        caught++;
+        gameState.found++;
+        gameState.score += 10;
+        gameState.stageScores[1] += 10;
+        playCorrectSound();
+        spawnConfetti();
+        yashaSay(randomFrom(yashaCorrect));
+        if (caught >= total) setTimeout(() => showStageComplete(), 500);
+      } else {
+        gameState.errors++;
+        gameState.stageErrors[1]++;
+        gameState.errorDetails.push({ stage: 2, letter: letter, explanation: consonantExplanations[letter] });
+        playWrongSound();
+        el.style.background = '#FFEBEE';
+        el.style.borderColor = 'var(--game-error)';
+        yashaSay(randomFrom(yashaWrong));
+        setTimeout(() => el.remove(), 500);
+      }
+      updateUI();
+    };
+    
+    area.appendChild(el);
+    lettersSpawned++;
+    
+    setTimeout(() => {
+      if (!el.classList.contains('caught')) el.remove();
+    }, 3000);
+    
+    setTimeout(spawnLetter, 800 + Math.random() * 700);
+  }
+  
+  spawnLetter();
+}
+
+function startStage3() {
+  gameState.found = 0;
+  gameState.errors = 0;
+  gameState.currentWord = 0;
+  updateUI();
+  showScreen('gameScreen3');
+  document.getElementById('topBar').classList.add('visible');
+  showCharacter();
+  yashaSay('Вставь гласную! ✏️');
+  showWord();
+}
+
+function showWord() {
+  if (gameState.currentWord >= words.length) {
+    setTimeout(() => showStageComplete(), 500);
+    return;
+  }
+  
+  const wordData = words[gameState.currentWord];
+  document.getElementById('wordDisplay').innerHTML = wordData.word.replace('_', '<span class="blank">?</span>');
+  
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  
+  shuffle(wordData.options).forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt;
+    btn.onclick = () => checkWordAnswer(opt, wordData.answer);
+    grid.appendChild(btn);
+  });
+}
+
+function checkWordAnswer(selected, correct) {
+  if (selected === correct) {
+    gameState.found++;
+    gameState.score += 10;
+    gameState.stageScores[2] += 10;
+    playCorrectSound();
+    spawnConfetti();
+    yashaSay(randomFrom(yashaCorrect));
+    speak('Верно!');
+    gameState.currentWord++;
+    setTimeout(showWord, 1000);
+  } else {
+    gameState.errors++;
+    gameState.stageErrors[2]++;
+    gameState.errorDetails.push({ stage: 3, letter: selected, explanation: `Нужна буква ${correct}` });
+    playWrongSound();
+    yashaSay(randomFrom(yashaWrong));
+    speak('Попробуй ещё раз!');
+  }
+  updateUI();
+}
+
+function showFinalScreen() {
+  document.getElementById('finalScore').textContent = gameState.score;
+  document.getElementById('finalCorrect').textContent = gameState.found;
+  document.getElementById('finalErrors').textContent = gameState.errors;
+  
+  let grade = '';
+  let message = '';
+  
+  if (gameState.errors === 0) {
+    grade = 'Превосходно!';
+    message = 'Молодец! Без единой ошибки! 🏆';
+  } else if (gameState.errors <= 3) {
+    grade = 'Отлично!';
+    message = 'Хороший результат! Молодец! 🎉';
+  } else if (gameState.errors <= 6) {
+    grade = 'Хорошо!';
+    message = 'Молодец! Потренируйся ещё! 💪';
+  } else {
+    grade = 'Молодец!';
+    message = 'Ты старался! Попробуй ещё раз! 🌈';
+  }
+  
+  document.getElementById('finalGrade').textContent = grade;
+  document.getElementById('finalMessage').textContent = message;
+  showScreen('finalScreen');
+  spawnConfetti();
+}
+
+function showErrors() {
+  const list = document.getElementById('errorsList');
+  list.innerHTML = '';
+  
+  if (gameState.errorDetails.length === 0) {
+    list.innerHTML = '<p style="text-align: center; font-size: 1.2rem; color: var(--game-success);">Ошибок нет! Молодец! 🌟</p>';
+  } else {
+    gameState.errorDetails.forEach((err) => {
+      const item = document.createElement('div');
+      item.className = 'stat-row';
+      item.style.borderBottom = '2px dashed var(--game-muted)';
+      item.innerHTML = `
+        <span style="font-weight: bold; color: var(--game-error);">Этап ${err.stage}: ${err.letter}</span>
+        <span style="color: var(--game-text);">${err.explanation}</span>
+      `;
+      list.appendChild(item);
+    });
+  }
+  showScreen('errorsScreen');
+}
+
+function backToFinal() {
+  showScreen('finalScreen');
+}
+
+function restartGame() {
+  document.getElementById('topBar').classList.remove('visible');
+  hideCharacter();
+  showScreen('startScreen');
+}
+</script>
+</body>
+</html>

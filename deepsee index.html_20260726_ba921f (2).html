@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Весёлая азбука: Гласные буквы</title>
+    <style>
+        :root {
+            --game-bg: #f5f0e8;
+            --game-card: #ffffff;
+            --game-primary: #1a3a6b;
+            --game-accent: #c41e3a;
+            --game-text: #1a2744;
+            --game-success: #2d7d46;
+            --game-error: #c41e3a;
+            --game-muted: #6b7d9e;
+            --ink-blue: #1a3a6b;
+            --ink-red: #c41e3a;
+            --paper: #fdfaf3;
+            --cell-line: #b8cce0;
+            --margin-red: #e8a0ad;
+            --sticker-yellow: #ffeaa7;
+            --sticker-pink: #ffd1dc;
+            --sticker-green: #c8f7c5;
+            --font-hand: 'Georgia', 'Times New Roman', serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: #e8e0d5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 29px, #c8d6e5 29px, #c8d6e5 30px),
+                repeating-linear-gradient(90deg, transparent, transparent 29px, #c8d6e5 29px, #c8d6e5 30px);
+            background-size: 30px 30px;
+            background-color: #f5f0e8;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            left: 30px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #e8a0ad;
+            z-index: 0;
+            border-radius: 1px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 780px;
+            background: var(--paper);
+            border-radius: 8px;
+            box-shadow:
+                3px 3px 0 rgba(0, 0, 0, 0.06),
+                8px 8px 24px rgba(0, 0, 0, 0.1),
+                inset 0 0 0 1px rgba(180, 190, 210, 0.3);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            min-height: 560px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notebook-header {
+            background: linear-gradient(180deg, #fdfaf3 0%, #f8f3e8 100%);
+            border-bottom: 2px dashed #b8cce0;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            position: relative;
+        }
+
+        .notebook-header::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 20px;
+            right: 20px;
+            height: 1px;
+            background: #d0dbe8;
+            border-radius: 1px;
+        }
+
+        .score-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            background: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1.5px dashed #b8cce0;
+            font-family: var(--font-hand);
+        }
+        .score-display .icon-star {
+            font-size: 1.3rem;
+            animation: starPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes starPulse {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.25) rotate(5deg);
+            }
+        }
+
+        .stage-indicator {
+            font-size: 0.9rem;
+            color: var(--game-muted);
+            background: #fff;
+            padding: 5px 12px;
+            border-radius: 15px;
+            border: 1px solid #dde4f0;
+            font-family: var(--font-hand);
+            letter-spacing: 0.3px;
+        }
+
+        .progress-wrap {
+            width: 100%;
+            padding: 8px 20px 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .progress-bar-outer {
+            flex: 1;
+            min-width: 120px;
+            height: 14px;
+            background: #e8ecf2;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1.5px solid #c8d6e5;
+            position: relative;
+        }
+        .progress-bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, #2d7d46, #4caf50);
+            border-radius: 10px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .progress-bar-inner::after {
+            content: '';
+            position: absolute;
+            right: 2px;
+            top: 2px;
+            bottom: 2px;
+            width: 16px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 6px;
+        }
+        .progress-text {
+            font-size: 0.85rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            white-space: nowrap;
+            font-family: var(--font-hand);
+            min-width: 90px;
+            text-align: right;
+        }
+
+        .main-area {
+            flex: 1;
+            padding: 10px 20px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+            background:
+                repeating-linear-gradient(0deg, transparent, transparent 29px, #e8eff7 29px, #e8eff7 30px),
+                repeating-linear-gradient(90deg, transparent, transparent 29px, #e8eff7 29px, #e8eff7 30px);
+            background-size: 30px 30px;
+            background-color: #fdfaf7;
+        }
+
+        .main-area::before {
+            content: '';
+            position: absolute;
+            left: 14px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #f0c4cf;
+            border-radius: 1px;
+            opacity: 0.6;
+            z-index: 0;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            text-align: center;
+            z-index: 1;
+            position: relative;
+            width: 100%;
+            flex: 1;
+        }
+        .screen.active {
+            display: flex;
+        }
+
+        .start-title {
+            font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+            color: var(--ink-blue);
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            position: relative;
+            display: inline-block;
+            font-family: var(--font-hand);
+        }
+        .start-title::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 10%;
+            right: 10%;
+            height: 3px;
+            background: var(--ink-red);
+            border-radius: 2px;
+        }
+        .start-subtitle {
+            font-size: 1rem;
+            color: var(--game-muted);
+            max-width: 400px;
+            font-family: var(--font-hand);
+            line-height: 1.5;
+        }
+        .mascot-img {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px dashed #b8cce0;
+            padding: 6px;
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+        .btn {
+            font-family: var(--font-hand);
+            font-size: 1.1rem;
+            padding: 12px 32px;
+            border-radius: 30px;
+            border: 2.5px solid var(--ink-blue);
+            background: #fff;
+            color: var(--ink-blue);
+            cursor: pointer;
+            font-weight: bold;
+            letter-spacing: 0.4px;
+            transition: all 0.2s;
+            position: relative;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.06);
+            min-width: 140px;
+        }
+        .btn:hover {
+            background: #f0f4fa;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+        }
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+        }
+        .btn-accent {
+            background: var(--ink-blue);
+            color: #fff;
+            border-color: var(--ink-blue);
+        }
+        .btn-accent:hover {
+            background: #254f8a;
+        }
+        .btn-small {
+            font-size: 0.9rem;
+            padding: 8px 20px;
+            min-width: auto;
+        }
+
+        .letters-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 600px;
+            z-index: 1;
+        }
+        @media (max-width: 500px) {
+            .letters-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 7px;
+            }
+        }
+        .letter-card {
+            aspect-ratio: 1;
+            background: #fff;
+            border: 2.5px solid #c8d6e5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-weight: bold;
+            color: var(--ink-blue);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            font-family: var(--font-hand);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.04);
+        }
+        .letter-card:hover {
+            border-color: #9ab4d4;
+            transform: translateY(-2px);
+            box-shadow: 3px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .letter-card:active {
+            transform: scale(0.94);
+        }
+        .letter-card.found {
+            background: #e0f5e4;
+            border-color: #4caf50;
+            color: #2d7d46;
+            cursor: default;
+            pointer-events: none;
+            animation: popFound 0.4s ease-out;
+        }
+        .letter-card.found::after {
+            content: '✓';
+            position: absolute;
+            top: 4px;
+            right: 8px;
+            font-size: 1rem;
+            color: #4caf50;
+            font-weight: bold;
+        }
+        @keyframes popFound {
+            0% {
+                transform: scale(1.2);
+            }
+            60% {
+                transform: scale(0.9);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        .letter-card.wrong-flash {
+            animation: shake 0.5s ease-out;
+            border-color: var(--ink-red) !important;
+            background: #fff0f0 !important;
+        }
+        @keyframes shake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            15% {
+                transform: translateX(-8px);
+            }
+            30% {
+                transform: translateX(8px);
+            }
+            45% {
+                transform: translateX(-5px);
+            }
+            60% {
+                transform: translateX(5px);
+            }
+            75% {
+                transform: translateX(-2px);
+            }
+            90% {
+                transform: translateX(2px);
+            }
+        }
+
+        .word-display {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: bold;
+            letter-spacing: 6px;
+            color: var(--ink-blue);
+            font-family: var(--font-hand);
+            background: #fff;
+            padding: 16px 28px;
+            border-radius: 12px;
+            border: 2px dashed #b8cce0;
+            display: inline-block;
+        }
+        .word-display .missing {
+            color: var(--ink-red);
+            border-bottom: 4px solid var(--ink-red);
+            display: inline-block;
+            width: 0.7em;
+            text-align: center;
+            animation: blinkCursor 0.8s ease-in-out infinite;
+        }
+        @keyframes blinkCursor {
+            0%,
+            100% {
+                border-bottom-color: var(--ink-red);
+            }
+            50% {
+                border-bottom-color: transparent;
+            }
+        }
+        .options-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .option-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2.5px solid #c8d6e5;
+            background: #fff;
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: var(--ink-blue);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-hand);
+            box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.04);
+        }
+        .option-btn:hover {
+            border-color: #9ab4d4;
+            transform: translateY(-2px);
+            box-shadow: 3px 5px 12px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn.correct-pick {
+            background: #e0f5e4;
+            border-color: #4caf50;
+            color: #2d7d46;
+            animation: popFound 0.4s ease-out;
+            pointer-events: none;
+        }
+        .option-btn.wrong-pick {
+            background: #fff0f0;
+            border-color: var(--ink-red);
+            animation: shake 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        .feedback-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 999;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .feedback-overlay.show {
+            opacity: 1;
+        }
+        .feedback-overlay img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .feedback-text {
+            position: relative;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 14px 24px;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--ink-blue);
+            text-align: center;
+            max-width: 85vw;
+            font-family: var(--font-hand);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+            border: 2px dashed #b8cce0;
+        }
+        .feedback-text.success {
+            border-color: #4caf50;
+            color: #2d7d46;
+        }
+        .feedback-text.error {
+            border-color: var(--ink-red);
+            color: var(--ink-red);
+        }
+
+        .mascot-bubble {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 10px 14px;
+            border: 2px dashed #b8cce0;
+            max-width: 500px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            z-index: 2;
+        }
+        .mascot-bubble .mascot-avatar {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #dde4f0;
+            flex-shrink: 0;
+        }
+        .mascot-bubble .bubble-text {
+            font-family: var(--font-hand);
+            font-size: 0.95rem;
+            color: var(--ink-blue);
+            line-height: 1.4;
+            text-align: left;
+        }
+        .mascot-bubble .bubble-name {
+            font-weight: bold;
+            color: var(--ink-red);
+            font-size: 0.8rem;
+            margin-bottom: 2px;
+        }
+
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .confetti-piece {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            animation: confettiFall 1s ease-out forwards;
+        }
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-60px) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(105vh) rotate(720deg) scale(0.3);
+                opacity: 0;
+            }
+        }
+
+        .final-stats {
+            font-size: 1rem;
+            color: var(--ink-blue);
+            font-family: var(--font-hand);
+            line-height: 1.8;
+        }
+        .final-stats span {
+            font-weight: bold;
+            color: var(--ink-red);
+        }
+        .final-img {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px dashed #b8cce0;
+            padding: 5px;
+            background: #fff;
+        }
+
+        .sticker {
+            position: absolute;
+            z-index: 3;
+            pointer-events: none;
+            font-size: 2rem;
+            opacity: 0.7;
+            animation: floatSticker 4s ease-in-out infinite;
+        }
+        .sticker.s1 {
+            top: 12px;
+            right: 18px;
+            animation-delay: 0s;
+        }
+        .sticker.s2 {
+            bottom: 20px;
+            left: 10px;
+            animation-delay: 1.5s;
+            font-size: 1.6rem;
+        }
+        .sticker.s3 {
+            top: 30%;
+            right: 8px;
+            animation-delay: 3s;
+            font-size: 1.8rem;
+        }
+        @keyframes floatSticker {
+            0%,
+            100% {
+                transform: translateY(0) rotate(-3deg);
+            }
+            50% {
+                transform: translateY(-10px) rotate(5deg);
+            }
+        }
+
+        @media (max-width: 500px) {
+            .game-container {
+                border-radius: 4px;
+                min-height: auto;
+            }
+            .notebook-header {
+                padding: 8px 12px;
+                gap: 4px;
+            }
+            .main-area {
+                padding: 8px 10px 12px;
+            }
+            .letter-card {
+                font-size: 1.3rem;
+                border-radius: 6px;
+            }
+            .option-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 1.3rem;
+            }
+            .word-display {
+                font-size: 1.8rem;
+                padding: 10px 16px;
+            }
+            .btn {
+                font-size: 0.95rem;
+                padding: 10px 22px;
+            }
+            .mascot-bubble {
+                max-width: 90vw;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container" id="gameContainer">
+        <div class="notebook-header">
+            <div class="score-display">
+                <span class="icon-star">⭐</span> Баллы: <span id="totalScore">0</span>
+            </div>
+            <div class="stage-indicator" id="stageLabel">Этап 1 из 2</div>
+        </div>
+        <div class="progress-wrap">
+            <div class="progress-bar-outer">
+                <div class="progress-bar-inner" id="progressBar" style="width: 0%;"></div>
+            </div>
+            <div class="progress-text" id="progressText">Выполнено: 0 | Осталось: 10</div>
+        </div>
+
+        <div class="main-area" id="mainArea">
+            <div class="screen active" id="screenStart">
+                <span class="sticker s1">📎</span>
+                <span class="sticker s2">🌟</span>
+                <span class="sticker s3">✏️</span>
+                <h1 class="start-title">Весёлая азбука</h1>
+                <p class="start-subtitle">Гласные буквы</p>
+                <img class="mascot-img" src="https://sun9-68.userapi.com/s/v1/ig2/HNkUjGS-0LG69XvLDEAuZVzDF1Ms3a1fYvgnRutr19ZaZh1BZ9LvP4tr8bx112LKG-TU-FR3tdCgwJ8xE4BNMHmP.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1080x1080,1280x1280,1440x1440,2048x2048&from=bu&u=heSNeiIHfe5xeDeP1Oh-4ZN4jfj8ScwAp_Hwo9NUP68&cs=400x400"
+                alt="Собачка Яша" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div style="display:none; width:140px;height:140px;border-radius:50%;background:#ffe0b2;border:4px dashed #b8cce0;display:flex;align-items:center;justify-content:center;font-size:4rem;" class="mascot-fallback">🐶</div>
+                <p style="font-family:var(--font-hand);color:var(--ink-blue);margin-top:-8px;">Привет! Я — собачка Яша!<br>Поможешь мне найти гласные буквы?</p>
+                <button class="btn btn-accent" onclick="startGame()">📖 Начать игру!</button>
+            </div>
+
+            <div class="screen" id="screenStage1">
+                <div class="mascot-bubble" id="mascotBubble1">
+                    <img class="mascot-avatar" src="https://sun9-68.userapi.com/s/v1/ig2/HNkUjGS-0LG69XvLDEAuZVzDF1Ms3a1fYvgnRutr19ZaZh1BZ9LvP4tr8bx112LKG-TU-FR3tdCgwJ8xE4BNMHmP.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1080x1080,1280x1280,1440x1440,2048x2048&from=bu&u=heSNeiIHfe5xeDeP1Oh-4ZN4jfj8ScwAp_Hwo9NUP68&cs=200x200"
+                    alt="Яша" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span style="display:none;font-size:2.5rem;">🐶</span>
+                    <div class="bubble-text">
+                        <div class="bubble-name">🐾 Яша:</div>
+                        <span id="bubbleMsg1">Найди все гласные буквы! Кликай на них.</span>
+                    </div>
+                </div>
+                <div class="letters-grid" id="lettersGrid"></div>
+            </div>
+
+            <div class="screen" id="screenStage2">
+                <div class="mascot-bubble" id="mascotBubble2">
+                    <img class="mascot-avatar" src="https://sun9-68.userapi.com/s/v1/ig2/HNkUjGS-0LG69XvLDEAuZVzDF1Ms3a1fYvgnRutr19ZaZh1BZ9LvP4tr8bx112LKG-TU-FR3tdCgwJ8xE4BNMHmP.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1080x1080,1280x1280,1440x1440,2048x2048&from=bu&u=heSNeiIHfe5xeDeP1Oh-4ZN4jfj8ScwAp_Hwo9NUP68&cs=200x200"
+                    alt="Яша" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span style="display:none;font-size:2.5rem;">🐶</span>
+                    <div class="bubble-text">
+                        <div class="bubble-name">🐾 Яша:</div>
+                        <span id="bubbleMsg2">Вставь пропущенную гласную букву!</span>
+                    </div>
+                </div>
+                <div class="word-display" id="wordDisplay">К_Т</div>
+                <div class="options-row" id="optionsRow"></div>
+                <button class="btn btn-small" id="btnNextStage2" style="display:none;" onclick="nextStage2Task()">Дальше ➡️</button>
+            </div>
+
+            <div class="screen" id="screenFinal">
+                <span class="sticker s1">🏆</span>
+                <span class="sticker s2">💯</span>
+                <h1 class="start-title" style="font-size:1.8rem;">Миссия выполнена!</h1>
+                <img class="final-img" src="https://sun9-26.userapi.com/s/v1/ig2/5QUZ44dhb7acAtWZME_QYuzUMtAjAEIptJ2NGrhS8bFe2dVt5z0e6lTQb5Mbptx4e9NlZhoPOOpwcAbvgdt940Z0.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1080x1080,1280x1280,1440x1440,2048x2048&from=bu&u=hN3EIo5xN98s-m4GIzFfHIUoFcjFBMcauolMaoJY4K0&cs=700x700"
+                alt="Яша радуется" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div style="display:none;width:160px;height:160px;border-radius:50%;background:#ffe0b2;border:4px dashed #b8cce0;align-items:center;justify-content:center;font-size:5rem;" class="final-fallback">🎉</div>
+                <div class="final-stats" id="finalStats">
+                    Всего баллов: <span id="finalScore">0</span><br>
+                    Верных ответов: <span id="finalCorrect">0</span> из <span id="finalTotal">20</span>
+                </div>
+                <p style="font-family:var(--font-hand);color:var(--game-muted);max-width:350px;" id="finalMessage"></p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+                    <button class="btn btn-accent" onclick="restartGame()">🔄 Играть снова</button>
+                    <button class="btn" onclick="showErrors()">📋 Посмотреть ошибки</button>
+                </div>
+                <div id="errorList" style="display:none;text-align:left;max-width:400px;font-family:var(--font-hand);font-size:0.9rem;color:var(--ink-blue);line-height:1.6;background:#fff;padding:12px 16px;border-radius:10px;border:2px dashed #b8cce0;max-height:150px;overflow-y:auto;width:100%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="feedback-overlay" id="feedbackOverlay">
+        <img id="feedbackImg" src="" alt="" style="display:none;">
+        <div class="feedback-text" id="feedbackTextEl"></div>
+    </div>
+
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <script>
+        (function() {
+            let totalScore = 0;
+            let totalCorrect = 0;
+            let totalTasks = 20;
+            let completedTasks = 0;
+            let currentStage = 0;
+            let stage1Found = 0;
+            let stage1Total = 10;
+            let stage2Index = 0;
+            let stage2Total = 10;
+            let stage2Answered = false;
+            let errorLog = [];
+
+            const vowels = ['А', 'Е', 'Ё', 'И', 'О', 'У', 'Ы', 'Э', 'Ю', 'Я'];
+            const consonants = ['Б', 'В', 'Г', 'Д', 'К', 'Л', 'М', 'Н', 'П', 'Т'];
+            let stage1Letters = [];
+
+            const stage2Tasks = [
+                { word: 'К_Т', missing: 'О', options: ['А', 'О', 'У'], hint: 'КОТ — пушистый друг' },
+                { word: 'М_ШКА', missing: 'Ы', options: ['И', 'Ы', 'Е'], hint: 'МЫШКА — маленькая, серая' },
+                { word: 'Д_М', missing: 'О', options: ['О', 'А', 'У'], hint: 'ДОМ — тёплый и родной' },
+                { word: 'Л_С', missing: 'Е', options: ['Е', 'И', 'Я'], hint: 'ЛЕС — много деревьев' },
+                { word: 'Р_КА', missing: 'У', options: ['У', 'О', 'А'], hint: 'РУКА — часть тела' },
+                { word: 'М_Р', missing: 'И', options: ['И', 'Е', 'А'], hint: 'МИР — наша планета' },
+                { word: 'Ш_Р', missing: 'А', options: ['А', 'О', 'У'], hint: 'ШАР — круглый, воздушный' },
+                { word: 'С_Р', missing: 'Ы', options: ['Ы', 'И', 'Е'], hint: 'СЫР — вкусный, с дырками' },
+                { word: 'Л_К', missing: 'Ю', options: ['Ю', 'У', 'Ё'], hint: 'ЛЮК — крышка в полу' },
+                { word: 'М_Д', missing: 'Ё', options: ['Ё', 'Е', 'О'], hint: 'МЁД — сладкий, от пчёл' }
+            ];
+
+            // Реплики Яши без ударений
+            const yashaCorrect = [
+                'Молодец! Ты отлично справляешься! 🎉',
+                'Верно! Ты настоящий знаток гласных! ⭐',
+                'Правильно! Я горжусь тобой! 💪',
+                'Супер! Так держать! 🌟'
+            ];
+            const yashaWrong = [
+                'Почти! Попробуй ещё разок! 🤗',
+                'Не страшно! Ошибка — это новый шаг к успеху! 🐾',
+                'Ничего! Давай подумаем вместе! 💭',
+                'Бывает! Ты всё равно молодец! 🌈'
+            ];
+            const yashaHint = [
+                'Гласные — это буквы, которые поются: А, О, У, И, Ы, Э, Е, Ё, Ю, Я.',
+                'Ищи буквы, которые можно пропеть! 🎵',
+                'Гласные буквы тянутся, как песенка!',
+                'Вспомни: гласных десять! Найди их все!'
+            ];
+            const yashaFinal = [
+                'Ты справился! Я так рад! Ты умница! 🏆',
+                'Великолепно! Все гласные твои! 💖',
+                'Потрясающе! Ты настоящий читатель! 📚',
+                'Ура! Миссия выполнима! Ты герой! 🦸'
+            ];
+
+            function getRandom(arr) {
+                return arr[Math.floor(Math.random() * arr.length)];
+            }
+
+            const $ = (sel) => document.querySelector(sel);
+            const screenStart = $('#screenStart');
+            const screenStage1 = $('#screenStage1');
+            const screenStage2 = $('#screenStage2');
+            const screenFinal = $('#screenFinal');
+            const lettersGrid = $('#lettersGrid');
+            const wordDisplay = $('#wordDisplay');
+            const optionsRow = $('#optionsRow');
+            const btnNextS2 = $('#btnNextStage2');
+            const progressBar = $('#progressBar');
+            const progressText = $('#progressText');
+            const totalScoreEl = $('#totalScore');
+            const stageLabel = $('#stageLabel');
+            const feedbackOverlay = $('#feedbackOverlay');
+            const feedbackImg = $('#feedbackImg');
+            const feedbackTextEl = $('#feedbackTextEl');
+            const confettiContainer = $('#confettiContainer');
+            const bubbleMsg1 = $('#bubbleMsg1');
+            const bubbleMsg2 = $('#bubbleMsg2');
+            const finalScoreEl = $('#finalScore');
+            const finalCorrectEl = $('#finalCorrect');
+            const finalTotalEl = $('#finalTotal');
+            const finalMessageEl = $('#finalMessage');
+            const errorListEl = $('#errorList');
+
+            function showScreen(screen) {
+                [screenStart, screenStage1, screenStage2, screenFinal].forEach(s => s.classList.remove('active'));
+                screen.classList.add('active');
+            }
+
+            function updateProgress() {
+                const pct = Math.round((completedTasks / totalTasks) * 100);
+                progressBar.style.width = pct + '%';
+                const remaining = totalTasks - completedTasks;
+                progressText.textContent = `Выполнено: ${completedTasks} | Осталось: ${remaining}`;
+                totalScoreEl.textContent = totalScore;
+                if (currentStage === 1) {
+                    stageLabel.textContent = 'Этап 1 из 2';
+                } else if (currentStage === 2) {
+                    stageLabel.textContent = 'Этап 2 из 2';
+                } else if (currentStage === 3) {
+                    stageLabel.textContent = 'Финал';
+                }
+            }
+
+            function spawnConfetti(count = 40) {
+                const colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff922b', '#cc5de8', '#20c997', '#ff6b9d'];
+                const frag = document.createDocumentFragment();
+                for (let i = 0; i < count; i++) {
+                    const piece = document.createElement('div');
+                    piece.className = 'confetti-piece';
+                    piece.style.left = Math.random() * 100 + '%';
+                    piece.style.top = -(Math.random() * 30 + 10) + 'px';
+                    piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    piece.style.animationDuration = (Math.random() * 0.6 + 0.8) + 's';
+                    piece.style.animationDelay = Math.random() * 0.3 + 's';
+                    piece.style.width = (Math.random() * 10 + 8) + 'px';
+                    piece.style.height = (Math.random() * 10 + 8) + 'px';
+                    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                    frag.appendChild(piece);
+                }
+                confettiContainer.appendChild(frag);
+                setTimeout(() => {
+                    confettiContainer.innerHTML = '';
+                }, 1500);
+            }
+
+            function showFeedback(type, message, duration = 1200) {
+                feedbackOverlay.classList.add('show');
+                feedbackTextEl.textContent = message;
+                feedbackTextEl.className = 'feedback-text ' + (type === 'success' ? 'success' : 'error');
+                if (type === 'success') {
+                    feedbackImg.src = 'https://sun9-85.userapi.com/s/v1/ig2/79OjGTOic44hDvWO2QzVTySu-QYbE6p58GcHr-8AhnIu1Lo1APel0HGP2cqJU9XAMswgSb_BG7GVcnpBT-9HavoG.jpg?quality=95&as=32x18,48x27,72x40,108x60,160x89,240x134,360x201,480x268,540x301,640x357,720x402,1080x603,1280x714,1376x768&from=bu&cs=1280x0';
+                    feedbackImg.style.display = 'block';
+                } else {
+                    feedbackImg.src = 'https://sun9-63.userapi.com/s/v1/ig2/gkMVpy2lmkugmXA8rpqh3Bp3HjEbBx6ej2-YVjivTarwc28QN6Bq1uMmm1bCYjw28g1xMjcNZZb443mQasKeNccf.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&u=aUTzDUD-0HdON1M__eSFiG8j0WD77O7l--lCG2ywEys&cs=1024x0';
+                    feedbackImg.style.display = 'block';
+                }
+                setTimeout(() => {
+                    feedbackOverlay.classList.remove('show');
+                    feedbackImg.style.display = 'none';
+                }, duration);
+            }
+
+            function speak(text) {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'ru-RU';
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1.4;
+                    utterance.volume = 0.9;
+                    const voices = window.speechSynthesis.getVoices();
+                    const ruFemaleVoice = voices.find(v => 
+                        v.lang.startsWith('ru') && 
+                        (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('женский'))
+                    );
+                    const ruVoice = ruFemaleVoice || voices.find(v => v.lang.startsWith('ru'));
+                    if (ruVoice) utterance.voice = ruVoice;
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+
+            function updateBubble(stage, message) {
+                if (stage === 1) {
+                    bubbleMsg1.textContent = message;
+                } else if (stage === 2) {
+                    bubbleMsg2.textContent = message;
+                }
+                speak(message);
+            }
+
+            window.startGame = function() {
+                totalScore = 0;
+                totalCorrect = 0;
+                completedTasks = 0;
+                currentStage = 1;
+                stage1Found = 0;
+                stage2Index = 0;
+                stage2Answered = false;
+                errorLog = [];
+                errorListEl.style.display = 'none';
+                errorListEl.innerHTML = '';
+                updateProgress();
+                initStage1();
+                showScreen(screenStage1);
+                updateBubble(1, getRandom(yashaHint));
+            };
+
+            function initStage1() {
+                stage1Found = 0;
+                stage1Letters = [...vowels, ...consonants];
+                for (let i = stage1Letters.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [stage1Letters[i], stage1Letters[j]] = [stage1Letters[j], stage1Letters[i]];
+                }
+                renderStage1Grid();
+                updateBubble(1, getRandom(yashaHint));
+            }
+
+            function renderStage1Grid() {
+                lettersGrid.innerHTML = '';
+                stage1Letters.forEach((letter, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'letter-card';
+                    card.textContent = letter;
+                    card.dataset.letter = letter;
+                    card.dataset.index = index;
+                    card.addEventListener('click', () => handleStage1Click(card, letter));
+                    lettersGrid.appendChild(card);
+                });
+            }
+
+            function handleStage1Click(card, letter) {
+                if (card.classList.contains('found')) return;
+                if (vowels.includes(letter)) {
+                    card.classList.add('found');
+                    stage1Found++;
+                    totalCorrect++;
+                    completedTasks++;
+                    totalScore += 10;
+                    updateProgress();
+                    spawnConfetti(30);
+                    // Сообщения без ударений
+                    showFeedback('success', 'Отлично! «' + letter + '» — это гласная буква! ✨');
+                    updateBubble(1, getRandom(yashaCorrect));
+                    if (stage1Found >= stage1Total) {
+                        setTimeout(() => {
+                            updateBubble(1, 'Ура! Ты нашёл все гласные! Переходим дальше! 🎉');
+                            spawnConfetti(60);
+                            setTimeout(() => {
+                                currentStage = 2;
+                                stage2Index = 0;
+                                stage2Answered = false;
+                                updateProgress();
+                                initStage2();
+                                showScreen(screenStage2);
+                                updateBubble(2, 'Теперь вставляй пропущенные гласные в слова! 📝');
+                            }, 1400);
+                        }, 600);
+                    }
+                } else {
+                    card.classList.add('wrong-flash');
+                    showFeedback('error', 'Почти! «' + letter + '» — согласная. Ищи гласные! 💡');
+                    updateBubble(1, getRandom(yashaWrong));
+                    errorLog.push({ stage: 1, task: 'Найти гласную', yourAnswer: letter, correctAnswer: 'Любая из: ' + vowels.join(', ') });
+                    setTimeout(() => {
+                        card.classList.remove('wrong-flash');
+                    }, 500);
+                }
+            }
+
+            function initStage2() {
+                stage2Index = 0;
+                stage2Answered = false;
+                renderStage2Task();
+                btnNextS2.style.display = 'none';
+            }
+
+            function renderStage2Task() {
+                if (stage2Index >= stage2Total) {
+                    finishGame();
+                    return;
+                }
+                stage2Answered = false;
+                btnNextS2.style.display = 'none';
+                const task = stage2Tasks[stage2Index];
+                wordDisplay.innerHTML = task.word.replace('_', '<span class="missing">_</span>');
+                optionsRow.innerHTML = '';
+                const shuffledOpts = [...task.options].sort(() => Math.random() - 0.5);
+                shuffledOpts.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.textContent = opt;
+                    btn.addEventListener('click', () => handleStage2Click(btn, opt, task));
+                    optionsRow.appendChild(btn);
+                });
+                updateBubble(2, 'Какая буква пропущена? Выбирай! 🤔');
+            }
+
+            function handleStage2Click(btn, chosen, task) {
+                if (stage2Answered) return;
+                stage2Answered = true;
+                const allBtns = optionsRow.querySelectorAll('.option-btn');
+                allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+                if (chosen === task.missing) {
+                    btn.classList.add('correct-pick');
+                    totalCorrect++;
+                    totalScore += 10;
+                    completedTasks++;
+                    updateProgress();
+                    spawnConfetti(35);
+                    showFeedback('success', 'Отлично! «' + task.missing + '» — правильно! ' + task.hint + ' 🎈');
+                    updateBubble(2, getRandom(yashaCorrect));
+                    wordDisplay.innerHTML = task.word.replace('_', '<span style="color:#2d7d46;font-weight:bold;">' + task.missing + '</span>');
+                } else {
+                    btn.classList.add('wrong-pick');
+                    showFeedback('error', 'Почти! Правильная буква — «' + task.missing + '». ' + task.hint + ' 💡');
+                    updateBubble(2, getRandom(yashaWrong));
+                    errorLog.push({ stage: 2, task: task.word, yourAnswer: chosen, correctAnswer: task.missing, hint: task.hint });
+                    allBtns.forEach(b => {
+                        if (b.textContent === task.missing) b.classList.add('correct-pick');
+                    });
+                    wordDisplay.innerHTML = task.word.replace('_', '<span style="color:#2d7d46;font-weight:bold;">' + task.missing + '</span>');
+                    completedTasks++;
+                    updateProgress();
+                }
+                btnNextS2.style.display = 'inline-block';
+                btnNextS2.focus();
+            }
+
+            window.nextStage2Task = function() {
+                stage2Index++;
+                stage2Answered = false;
+                if (stage2Index >= stage2Total) {
+                    finishGame();
+                } else {
+                    renderStage2Task();
+                }
+            };
+
+            function finishGame() {
+                currentStage = 3;
+                updateProgress();
+                showScreen(screenFinal);
+                finalScoreEl.textContent = totalScore;
+                finalCorrectEl.textContent = totalCorrect;
+                finalTotalEl.textContent = totalTasks;
+                const pct = Math.round((totalCorrect / totalTasks) * 100);
+                let msg = '';
+                if (pct >= 90) msg = 'Великолепный результат! Ты настоящий знаток гласных! 🏆';
+                else if (pct >= 70) msg = 'Очень хорошо! Ещё немного — и будет идеально! 🌟';
+                else if (pct >= 50) msg = 'Хороший старт! Продолжай тренироваться! 💪';
+                else msg = 'Ты старался! Каждая ошибка — это шаг к успеху! 🤗';
+                finalMessageEl.textContent = msg;
+                updateBubble(2, getRandom(yashaFinal));
+                spawnConfetti(80);
+                speak(msg);
+            }
+
+            window.showErrors = function() {
+                if (errorLog.length === 0) {
+                    errorListEl.innerHTML = '<p>🎉 Ошибок нет! Ты всё сделал правильно!</p>';
+                } else {
+                    let html = '<p><b>📋 Ошибки:</b></p><ul>';
+                    errorLog.forEach((e, i) => {
+                        html += `<li>${e.stage===1?'Этап 1':'Этап 2'}: задание «${e.task}» — твой ответ: <span style="color:#c41e3a;">${e.yourAnswer}</span>, правильно: <span style="color:#2d7d46;">${e.correctAnswer}</span>${e.hint?' ('+e.hint+')':''}</li>`;
+                    });
+                    html += '</ul>';
+                    errorListEl.innerHTML = html;
+                }
+                errorListEl.style.display = 'block';
+                errorListEl.scrollIntoView({ behavior: 'smooth' });
+            };
+
+            window.restartGame = function() {
+                errorListEl.style.display = 'none';
+                errorListEl.innerHTML = '';
+                totalScore = 0;
+                totalCorrect = 0;
+                completedTasks = 0;
+                currentStage = 1;
+                stage1Found = 0;
+                stage2Index = 0;
+                stage2Answered = false;
+                errorLog = [];
+                updateProgress();
+                initStage1();
+                showScreen(screenStage1);
+                updateBubble(1, getRandom(yashaHint));
+            };
+
+            updateProgress();
+            showScreen(screenStart);
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+                window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+            }
+            bubbleMsg1.textContent = 'Найди все гласные буквы! Кликай на них.';
+            bubbleMsg2.textContent = 'Вставь пропущенную гласную букву!';
+        })();
+    </script>
+</body>
+</html>
